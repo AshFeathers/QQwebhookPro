@@ -6,6 +6,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
+import os from 'os';
 import { configManager } from './config.js';
 import { Ed25519Signer } from './crypto.js';
 
@@ -69,6 +70,72 @@ function authenticateToken(req: express.Request, res: express.Response, next: ex
     next();
   });
 }
+
+// CPU使用率监控类
+class CpuMonitor {
+  private prevCpuInfo: os.CpuInfo[] | null = null;
+  private lastUpdateTime: number = 0;
+  private currentUsage: number = 0;
+  private updateInterval: number = 1000; // 1秒更新一次
+
+  constructor() {
+    this.updateCpuUsage();
+    // 定时更新CPU使用率
+    setInterval(() => {
+      this.updateCpuUsage();
+    }, this.updateInterval);
+  }
+
+  private updateCpuUsage() {
+    const cpus = os.cpus();
+    const now = Date.now();
+
+    if (this.prevCpuInfo && now - this.lastUpdateTime >= this.updateInterval) {
+      let totalIdle = 0;
+      let totalTick = 0;
+
+      for (let i = 0; i < cpus.length; i++) {
+        const cpu = cpus[i];
+        const prevCpu = this.prevCpuInfo[i];
+
+        if (prevCpu) {
+          // 计算时间差
+          const idleDiff = cpu.times.idle - prevCpu.times.idle;
+          const totalDiff = Object.values(cpu.times).reduce((acc, time) => acc + time, 0) - 
+                           Object.values(prevCpu.times).reduce((acc, time) => acc + time, 0);
+
+          totalIdle += idleDiff;
+          totalTick += totalDiff;
+        }
+      }
+
+      if (totalTick > 0) {
+        const usage = 100 - (totalIdle / totalTick) * 100;
+        this.currentUsage = Math.max(0, Math.min(100, Math.round(usage)));
+      }
+    }
+
+    this.prevCpuInfo = cpus;
+    this.lastUpdateTime = now;
+  }
+
+  public getCpuUsage(): number {
+    return this.currentUsage;
+  }
+
+  public getCpuInfo() {
+    const cpus = os.cpus();
+    return {
+      usage: this.currentUsage,
+      cores: cpus.length,
+      model: cpus[0]?.model || 'Unknown',
+      speed: cpus[0]?.speed || 0
+    };
+  }
+}
+
+// 初始化CPU监控器
+const cpuMonitor = new CpuMonitor();
 
 // 日志存储
 const logs: Array<{
@@ -140,12 +207,15 @@ app.get('/api', (req, res) => {
 
 // 健康检查端点
 app.get('/health', (req, res) => {
+  const cpuInfo = cpuMonitor.getCpuInfo();
   res.status(200).json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     memory: process.memoryUsage(),
-    connections: activeConnections.size
+    cpu: cpuInfo,
+    connections: activeConnections.size,
+    loadAverage: os.loadavg()
   });
 });
 
@@ -348,6 +418,45 @@ app.get('/api/connections', authenticateToken, (req, res) => {
   });
   
   res.json({ connections, total: connections.length });
+});
+
+// 仪表盘统计API
+app.get('/api/dashboard/stats', authenticateToken, (req, res) => {
+  try {
+    const config = configManager.get();
+    const secretsStats = configManager.getSecretsStats();
+    const memUsage = process.memoryUsage();
+    const cpuInfo = cpuMonitor.getCpuInfo();
+    
+    const stats = {
+      connections: {
+        active: activeConnections.size,
+        total: Object.keys(config.secrets).length
+      },
+      secrets: {
+        total: secretsStats.total,
+        blocked: secretsStats.disabled // 使用 disabled 作为 blocked
+      },
+      logs: {
+        total: logs.length,
+        errors: logs.filter(log => log.level === 'error').length,
+        warnings: logs.filter(log => log.level === 'warning').length
+      },
+      system: {
+        uptime: process.uptime(),
+        memory: Math.round((memUsage.heapUsed / memUsage.heapTotal) * 100), // 转换为百分比
+        cpu: cpuInfo.usage, // 使用实际的CPU使用率
+        cpuCores: cpuInfo.cores,
+        cpuModel: cpuInfo.model,
+        loadAverage: os.loadavg()
+      }
+    };
+    
+    res.json(stats); // 直接返回stats，不包装在success中
+  } catch (error) {
+    log('error', '获取仪表盘统计失败', { error: (error as Error).message });
+    res.status(500).json({ error: '获取仪表盘统计失败' });
+  }
 });
 
 // 配置管理API

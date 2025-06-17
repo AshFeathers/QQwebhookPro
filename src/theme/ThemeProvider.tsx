@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useEffect, ReactNode } from 'react';
 import { ConfigProvider } from '@arco-design/web-react';
 import { useTheme } from '../hooks/useTheme';
 import { applyThemeToDOM } from './utils';
@@ -13,7 +13,11 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const { themeConfig, isDark, effectiveTheme } = useTheme();
 
   useEffect(() => {
-    applyThemeToDOM(effectiveTheme, themeConfig.primaryColor, themeConfig.compactMode);
+    try {
+      applyThemeToDOM(effectiveTheme, themeConfig.primaryColor, themeConfig.compactMode);
+    } catch (error) {
+      console.error('Failed to apply theme:', error);
+    }
   }, [effectiveTheme, themeConfig.primaryColor, themeConfig.compactMode]);
 
   return (
@@ -21,7 +25,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
       <ConfigProvider
         theme={{
           token: {
-            colorPrimary: themeConfig.primaryColor,
+            colorPrimary: themeConfig?.primaryColor || '#165DFF',
           },
         }}
         componentConfig={{
@@ -40,7 +44,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
           },
         }}
       >
-        <div className={`app-theme ${isDark ? 'dark' : 'light'} ${themeConfig.compactMode ? 'compact' : ''}`}>
+        <div className={`app-theme ${isDark ? 'dark' : 'light'} ${themeConfig?.compactMode ? 'compact' : ''}`}>
           {children}
         </div>
       </ConfigProvider>

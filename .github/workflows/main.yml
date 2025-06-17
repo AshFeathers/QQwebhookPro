@@ -31,7 +31,7 @@ permissions:
 
 # 环境变量
 env:
-  NODE_VERSION: '18'
+  NODE_VERSION: '20'
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/qqwebhookpro
 
@@ -52,8 +52,6 @@ jobs:  # 1. 构建和测试
 
       - name: 📦 设置 pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: 📦 设置 Node.js
         uses: actions/setup-node@v4
@@ -105,9 +103,13 @@ jobs:  # 1. 构建和测试
 
       - name: 🧪 运行代码检查
         run: |
-          echo "🔍 运行ESLint检查..."
+          echo "🔍 运行基础语法检查..."
           pnpm run lint
-          echo "✅ 代码检查通过"
+          echo "✅ 基础语法检查通过"
+          
+          echo "🔍 运行TypeScript类型检查..."
+          pnpm run type-check
+          echo "✅ TypeScript类型检查通过"
 
       - name: 🏗️ 构建项目
         run: |
@@ -251,6 +253,7 @@ jobs:  # 1. 构建和测试
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
+
   # 3. 创建GitHub Release
   create-release:
     name: 🎉 创建GitHub Release
@@ -316,7 +319,7 @@ jobs:  # 1. 构建和测试
           echo "" >> $GITHUB_OUTPUT
           echo "#### 方式2: 使用Docker" >> $GITHUB_OUTPUT
           echo "\`\`\`bash" >> $GITHUB_OUTPUT
-          echo "docker run -d -p 3002:3002 -p 5173:5173 \\" >> $GITHUB_OUTPUT
+          echo "docker run -d -p 3002:3002 \\" >> $GITHUB_OUTPUT
           echo "  -v ./data:/app/data \\" >> $GITHUB_OUTPUT
           echo "  ghcr.io/${{ github.repository }}:$CURRENT_TAG" >> $GITHUB_OUTPUT
           echo "\`\`\`" >> $GITHUB_OUTPUT
@@ -340,7 +343,8 @@ jobs:  # 1. 构建和测试
           echo "- 🚀 [部署指南](./DEPLOYMENT.md)" >> $GITHUB_OUTPUT
           echo "- 📊 [项目总结](./PROJECT_SUMMARY.md)" >> $GITHUB_OUTPUT
           echo "- 🐛 [问题反馈](../../issues)" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT          echo "---" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT          
+          echo "---" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
           echo "**技术栈**: TypeScript + React + Express + WebSocket + Docker" >> $GITHUB_OUTPUT
           echo "**Node.js版本要求**: 18.0+" >> $GITHUB_OUTPUT
@@ -387,3 +391,5 @@ jobs:  # 1. 构建和测试
           echo "❌ QQ Webhook Pro ${{ needs.build-and-test.outputs.version }} 发布失败!"
           echo "请检查工作流日志获取详细信息。"
           exit 1
+
+  

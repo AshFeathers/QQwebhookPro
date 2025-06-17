@@ -162,7 +162,7 @@ export default function EnhancedDashboard({
               <Statistic
                 title="封禁密钥"
                 value={blockedSecrets.length}
-                suffix={stats ? `/ ${stats.secrets.total}` : ''}
+                suffix={stats?.secrets?.total ? `/ ${stats.secrets.total}` : ''}
                 prefix={<IconSafe style={{ color: '#ff4d4f' }} />}
                 countUp
               />
@@ -198,7 +198,7 @@ export default function EnhancedDashboard({
                 <IconClockCircle style={{ fontSize: '24px', color: '#52c41a', marginBottom: '8px' }} />
                 <Text bold>运行时间</Text>
                 <Text type="secondary" style={{ fontSize: '12px', marginTop: '4px' }}>
-                  {stats ? formatUptime(stats.system.uptime) : '--'}
+                  {stats?.system?.uptime ? formatUptime(stats.system.uptime) : '--'}
                 </Text>
               </div>
             </Card>

@@ -11,8 +11,7 @@ import {
   Message,
   Switch,
   Drawer,
-  Divider,
-  ConfigProvider
+  Divider
 } from '@arco-design/web-react';
 import {
   IconDashboard,
@@ -39,6 +38,7 @@ import Login from './components/Login';
 import BanManager from './components/BanManager';
 import EnhancedDashboard from './components/EnhancedDashboard';
 import ApiDocs from './components/ApiDocs';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const { Header, Sider, Content } = Layout;
 const { Title } = Typography;
@@ -86,6 +86,7 @@ export default function App() {
         const authState = await api.checkAuth();
         setIsAuthenticated(authState.isAuthenticated);
       } catch (error) {
+        console.error('Auth check failed:', error);
         setIsAuthenticated(false);
       } finally {
         setAuthLoading(false);
@@ -100,8 +101,12 @@ export default function App() {
   };
 
   const handleLoginSuccess = () => {
+    console.log('Login successful, setting authenticated state');
     setIsAuthenticated(true);
-    loadData();
+    // 稍微延迟调用loadData，确保状态已经更新
+    setTimeout(() => {
+      loadData();
+    }, 100);
   };
 
   const handleLogout = async () => {
@@ -145,16 +150,41 @@ export default function App() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [logsRes, connectionsRes, blockedRes] = await Promise.all([
+      
+      // 分别调用各个API，避免一个失败影响其他
+      const results = await Promise.allSettled([
         api.getLogs(),
         api.getConnections(),
         api.getBlockedSecrets()
-      ]);      setLogs(logsRes.logs || []);
-      setConnections(connectionsRes.connections || []);
-      setBlockedSecrets(blockedRes.blockedSecrets || []);
+      ]);
+
+      // 处理日志数据
+      if (results[0].status === 'fulfilled') {
+        setLogs(results[0].value.logs || []);
+      } else {
+        console.error('Failed to load logs:', results[0].reason);
+        setLogs([]);
+      }
+
+      // 处理连接数据
+      if (results[1].status === 'fulfilled') {
+        setConnections(results[1].value.connections || []);
+      } else {
+        console.error('Failed to load connections:', results[1].reason);
+        setConnections([]);
+      }
+
+      // 处理封禁数据
+      if (results[2].status === 'fulfilled') {
+        setBlockedSecrets(results[2].value.blockedSecrets || []);
+      } else {
+        console.error('Failed to load blocked secrets:', results[2].reason);
+        setBlockedSecrets([]);
+      }
+
     } catch (error) {
       console.error('Failed to load data:', error);
-      Message.error('加载数据失败');
+      // 不显示错误消息，避免干扰用户体验
     } finally {
       setLoading(false);
     }
@@ -193,19 +223,20 @@ export default function App() {
   };
 
   const renderContent = () => {
-    switch (currentTab) {
-      case 'dashboard':
-        return (
-          <EnhancedDashboard
-            logs={logs}
-            connections={connections}
-            blockedSecrets={blockedSecrets}
-            isConnected={true}
-            onRefresh={loadData}
-            loading={loading}
-            onNavigate={setCurrentTab}
-          />
-        );
+    try {
+      switch (currentTab) {
+        case 'dashboard':
+          return (
+            <EnhancedDashboard
+              logs={logs}
+              connections={connections}
+              blockedSecrets={blockedSecrets}
+              isConnected={true}
+              onRefresh={loadData}
+              loading={loading}
+              onNavigate={setCurrentTab}
+            />
+          );
         
       case 'websocket':
         return (
@@ -342,37 +373,57 @@ export default function App() {
         return <ConfigManager onRefresh={loadData} />;
         
       case 'theme':
-        return <ThemeSettings onThemeChange={loadData} />;
+        return <ThemeSettings onThemeChange={loadData} />;        case 'docs':
+          return <ApiDocs />;
         
-      case 'docs':
-        return <ApiDocs />;
-        
-      default:
-        return null;
+        default:
+          return null;
+      }
+    } catch (error) {
+      console.error('Error in renderContent:', error);
+      return (
+        <Card>
+          <div style={{ padding: '20px', textAlign: 'center' }}>
+            <p>页面加载出错，请尝试刷新</p>
+            <Button onClick={() => window.location.reload()}>刷新页面</Button>
+          </div>
+        </Card>
+      );
     }
   };
 
   // 如果正在检查认证状态，显示加载状态
   if (authLoading) {
     return (
-      <div style={{
-        height: '100vh',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        background: 'var(--color-bg-1)'
-      }}>
-        <Card loading style={{ width: 300, height: 200 }} />
-      </div>
+      <ErrorBoundary>
+        <ThemeProvider>
+          <div style={{
+            height: '100vh',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            background: 'var(--color-bg-1)'
+          }}>
+            <Card loading style={{ width: 300, height: 200 }} />
+          </div>
+        </ThemeProvider>
+      </ErrorBoundary>
     );
   }
 
   // 如果未认证，显示登录页面
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={handleLoginSuccess} />;
+    return (
+      <ErrorBoundary>
+        <ThemeProvider>
+          <Login onLoginSuccess={handleLoginSuccess} />
+        </ThemeProvider>
+      </ErrorBoundary>
+    );
   }
   return (
-    <ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider>
       <Layout style={{ height: '100vh' }}>
         <Sider
           collapsed={collapsed}
@@ -540,6 +591,7 @@ export default function App() {
             </Card>
           </Space>        </Drawer>
       </Layout>
-    </ThemeProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
