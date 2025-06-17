@@ -122,33 +122,40 @@ jobs:  # 1. 构建和测试
           echo "📦 准备构建产物..."
           mkdir -p release-assets
           
-          # 创建完整的源码包
+          # 获取git commit hash
+          COMMIT_HASH=$(git rev-parse --short HEAD)
+          VERSION_WITH_HASH="${{ steps.version.outputs.version }}-${COMMIT_HASH}"
+          
+          # 创建完整的源码包 (排除变化的文件)
           echo "📁 创建源码包..."
-          tar -czf release-assets/qq-webhook-pro-${{ steps.version.outputs.version }}-source.tar.gz \
+          tar -czf release-assets/qq-webhook-pro-${VERSION_WITH_HASH}-source.tar.gz \
             --exclude='.git' \
             --exclude='node_modules' \
+            --exclude='dist' \
             --exclude='logs' \
             --exclude='backups' \
             --exclude='*.log' \
             --exclude='.env*' \
             --exclude='config.json' \
+            --exclude='release-assets' \
             .
           
           # 创建构建后的发布包
           echo "📦 创建发布包..."
           mkdir -p qq-webhook-pro-release
-            # 复制必要文件
+          
+          # 复制必要文件
           cp -r dist/ qq-webhook-pro-release/
           cp package.json qq-webhook-pro-release/
           cp pnpm-lock.yaml qq-webhook-pro-release/
           cp README.md qq-webhook-pro-release/
           cp PROJECT_SUMMARY.md qq-webhook-pro-release/
-          cp DEPLOYMENT.md qq-webhook-pro-release/
-          cp Dockerfile qq-webhook-pro-release/
-          cp docker-compose.yml qq-webhook-pro-release/
-          cp nginx.conf qq-webhook-pro-release/
-          cp -r deploy*.sh qq-webhook-pro-release/ 2>/dev/null || true
-          cp -r deploy*.bat qq-webhook-pro-release/ 2>/dev/null || true
+          
+          # 复制可选文件（如果存在）
+          [ -f DEPLOYMENT.md ] && cp DEPLOYMENT.md qq-webhook-pro-release/ || echo "⚠️  DEPLOYMENT.md 不存在，跳过"
+          [ -f Dockerfile ] && cp Dockerfile qq-webhook-pro-release/ || echo "⚠️  Dockerfile 不存在，跳过"  
+          [ -f docker-compose.yml ] && cp docker-compose.yml qq-webhook-pro-release/ || echo "⚠️  docker-compose.yml 不存在，跳过"
+          [ -f nginx.conf ] && cp nginx.conf qq-webhook-pro-release/ || echo "⚠️  nginx.conf 不存在，跳过"
           
           # 创建启动脚本
           cat > qq-webhook-pro-release/start.sh << 'EOF'
@@ -201,10 +208,12 @@ jobs:  # 1. 构建和测试
           EOF
           
           # 压缩发布包
-          tar -czf release-assets/qq-webhook-pro-${{ steps.version.outputs.version }}-release.tar.gz qq-webhook-pro-release/
-          zip -r release-assets/qq-webhook-pro-${{ steps.version.outputs.version }}-release.zip qq-webhook-pro-release/
+          tar -czf release-assets/qq-webhook-pro-${VERSION_WITH_HASH}-release.tar.gz qq-webhook-pro-release/
+          zip -r release-assets/qq-webhook-pro-${VERSION_WITH_HASH}-release.zip qq-webhook-pro-release/
           
           echo "✅ 构建产物准备完成"
+          echo "📁 生成的文件："
+          ls -la release-assets/
 
       - name: 📤 上传构建产物
         uses: actions/upload-artifact@v4
@@ -213,177 +222,50 @@ jobs:  # 1. 构建和测试
           path: release-assets/
           retention-days: 30
 
-  # 2. Docker镜像构建
-  build-docker:
-    name: 🐳 构建Docker镜像
+  # 发布到GitHub Releases
+  release:
+    name: 🚀 发布版本
     runs-on: ubuntu-latest
     needs: build-and-test
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
     
     steps:
-      - name: 📥 检出代码
-        uses: actions/checkout@v4
-
-      - name: 🔧 设置 Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: 🔐 登录到容器注册表
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 📋 提取元数据
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=ref,event=tag
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=raw,value=${{ needs.build-and-test.outputs.version }}
-
-      - name: 🏗️ 构建并推送Docker镜像
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
-
-  # 3. 创建GitHub Release
-  create-release:
-    name: 🎉 创建GitHub Release
-    runs-on: ubuntu-latest
-    needs: [build-and-test, build-docker]
-    
-    steps:
-      - name: 📥 检出代码
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: 📤 下载构建产物
+      - name: 📥 下载构建产物
         uses: actions/download-artifact@v4
         with:
           name: release-assets
           path: release-assets/
 
-      - name: 📋 生成更新日志
-        id: changelog
-        run: |
-          echo "📝 生成更新日志..."
-          
-          # 获取上一个标签
-          PREVIOUS_TAG=$(git tag --sort=-version:refname | head -n 1 2>/dev/null || echo "")
-          CURRENT_TAG="${{ needs.build-and-test.outputs.version }}"
-          
-          echo "changelog<<EOF" >> $GITHUB_OUTPUT
-          
-          # 判断是否为分支推送
-          if [[ ! "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "## 🚧 QQ Webhook Pro $CURRENT_TAG (开发版本)" >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-            echo "> ⚠️ **这是一个开发版本，仅供测试使用**" >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-            echo "- 📝 **分支**: ${{ github.ref_name }}" >> $GITHUB_OUTPUT
-            echo "- 🔗 **提交**: [\`${{ github.sha }}\`](${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }})" >> $GITHUB_OUTPUT
-            echo "- 🕐 **构建时间**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
-          else
-            echo "## 🎉 QQ Webhook Pro $CURRENT_TAG" >> $GITHUB_OUTPUT
-          fi
-          
-          echo "" >> $GITHUB_OUTPUT
-          echo "### 📦 此版本包含" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "- 🔨 **完整源码包**: \`qq-webhook-pro-$CURRENT_TAG-source.tar.gz\`" >> $GITHUB_OUTPUT
-          echo "- 📦 **即用发布包**: \`qq-webhook-pro-$CURRENT_TAG-release.tar.gz\` / \`qq-webhook-pro-$CURRENT_TAG-release.zip\`" >> $GITHUB_OUTPUT
-          echo "- 🐳 **Docker镜像**: \`ghcr.io/${{ github.repository }}:$CURRENT_TAG\`" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "### 🚀 快速开始" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "#### 方式1: 使用发布包" >> $GITHUB_OUTPUT
-          echo "\`\`\`bash" >> $GITHUB_OUTPUT
-          echo "# 下载并解压发布包" >> $GITHUB_OUTPUT
-          echo "tar -xzf qq-webhook-pro-$CURRENT_TAG-release.tar.gz" >> $GITHUB_OUTPUT
-          echo "cd qq-webhook-pro-release" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "# 启动服务" >> $GITHUB_OUTPUT
-          echo "./start.sh  # Linux/macOS" >> $GITHUB_OUTPUT
-          echo "# 或" >> $GITHUB_OUTPUT
-          echo "start.bat   # Windows" >> $GITHUB_OUTPUT
-          echo "\`\`\`" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "#### 方式2: 使用Docker" >> $GITHUB_OUTPUT
-          echo "\`\`\`bash" >> $GITHUB_OUTPUT
-          echo "docker run -d -p 3002:3002 \\" >> $GITHUB_OUTPUT
-          echo "  -v ./data:/app/data \\" >> $GITHUB_OUTPUT
-          echo "  ghcr.io/${{ github.repository }}:$CURRENT_TAG" >> $GITHUB_OUTPUT
-          echo "\`\`\`" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT          
-          if [ -n "$PREVIOUS_TAG" ] && [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "### 📝 更新内容" >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-            git log $PREVIOUS_TAG..$CURRENT_TAG --pretty=format:"- %s" >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-          elif [[ ! "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "### 📝 最近提交" >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-            git log --oneline -10 --pretty=format:"- %s (\`%h\`)" >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-          fi
-          
-          echo "" >> $GITHUB_OUTPUT
-          echo "### 📚 文档和支持" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "- 📖 [完整文档](./README.md)" >> $GITHUB_OUTPUT
-          echo "- 🚀 [部署指南](./DEPLOYMENT.md)" >> $GITHUB_OUTPUT
-          echo "- 📊 [项目总结](./PROJECT_SUMMARY.md)" >> $GITHUB_OUTPUT
-          echo "- 🐛 [问题反馈](../../issues)" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT          
-          echo "---" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          echo "**技术栈**: TypeScript + React + Express + WebSocket + Docker" >> $GITHUB_OUTPUT
-          echo "**Node.js版本要求**: 18.0+" >> $GITHUB_OUTPUT
-          echo "**构建时间**: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
-          
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: 🎉 创建Release
+      - name: 🚀 创建GitHub Release
         uses: softprops/action-gh-release@v1
         with:
+          name: ${{ needs.build-and-test.outputs.version }}
           tag_name: ${{ needs.build-and-test.outputs.version }}
-          name: "QQ Webhook Pro ${{ needs.build-and-test.outputs.version }}"
-          body: ${{ steps.changelog.outputs.changelog }}
-          prerelease: ${{ github.event.inputs.prerelease == 'true' || !startsWith(github.ref, 'refs/tags/') }}
+          prerelease: ${{ github.event.inputs.prerelease || false }}
+          generate_release_notes: true
           files: |
             release-assets/*
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-  # 4. 通知和清理
-  notify:
-    name: 📢 发布通知
-    runs-on: ubuntu-latest
-    needs: [build-and-test, create-release]
-    if: always()
-    
-    steps:
-      - name: 📢 发布成功通知
-        if: needs.create-release.result == 'success'
-        run: |
-          echo "🎉 QQ Webhook Pro ${{ needs.build-and-test.outputs.version }} 发布成功!"
-          echo ""
-          echo "📦 发布包:"
-          echo "  - 源码包: qq-webhook-pro-${{ needs.build-and-test.outputs.version }}-source.tar.gz"
-          echo "  - 发布包: qq-webhook-pro-${{ needs.build-and-test.outputs.version }}-release.tar.gz"
-          echo "  - 发布包: qq-webhook-pro-${{ needs.build-and-test.outputs.version }}-release.zip"
-          echo ""
-          echo "🐳 Docker镜像: ghcr.io/${{ github.repository }}:${{ needs.build-and-test.outputs.version }}"
-          echo ""
-          echo "🔗 Release页面: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ needs.build-and-test.outputs.version }}"
+          body: |
+            ## 🎉 QQ Webhook Pro ${{ needs.build-and-test.outputs.version }}
+            
+            ### 📦 下载说明
+            - **源码包**: `qq-webhook-pro-*-source.tar.gz` - 完整源码，需要自行构建
+            - **发布包**: `qq-webhook-pro-*-release.tar.gz/.zip` - 预构建版本，开箱即用
+            
+            ### 🚀 快速开始
+            1. 下载发布包
+            2. 解压后运行 `./start.sh` (Linux/Mac) 或 `start.bat` (Windows)
+            3. 访问 http://localhost:3002
+            
+            ### 📋 系统要求
+            - Node.js 18+
+            - pnpm (自动安装依赖)
+            
+            ---
+            
+            完整文档请查看 [README.md](https://github.com/${{ github.repository }}/blob/main/README.md)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: ❌ 发布失败通知
         if: needs.create-release.result == 'failure'
