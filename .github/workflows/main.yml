@@ -1,7 +1,7 @@
 name: 🚀 Build and Release
 
 on:
-  # 当推送到master分支或推送标签时触发
+  # 推送到主分支时触发
   push:
     branches:
       - 'master'
@@ -9,7 +9,7 @@ on:
     tags:
       - 'v*'
   
-  # 手动触发
+  # 手动触发发布
   workflow_dispatch:
     inputs:
       version:
@@ -27,22 +27,16 @@ on:
 permissions:
   contents: write
   packages: write
-  pull-requests: read
 
 # 环境变量
 env:
   NODE_VERSION: '20'
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/qqwebhookpro
 
-jobs:  # 1. 构建和测试
-  build-and-test:
-    name: 🔨 构建和测试
+jobs:
+  # 统一的构建、测试和发布流程
+  build-test-release:
+    name: 🔨 构建测试并发布
     runs-on: ubuntu-latest
-    
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      package-version: ${{ steps.package.outputs.version }}
     
     steps:
       - name: 📥 检出代码
@@ -77,7 +71,7 @@ jobs:  # 1. 构建和测试
           pnpm install --frozen-lockfile
           echo "✅ 依赖安装完成"
 
-      - name: 📋 获取版本信息
+      - name: 📋 确定版本信息
         id: version
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
@@ -93,13 +87,6 @@ jobs:  # 1. 构建和测试
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "🏷️ 版本: ${VERSION}"
-
-      - name: 📋 获取package.json版本
-        id: package
-        run: |
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-          echo "version=${PACKAGE_VERSION}" >> $GITHUB_OUTPUT
-          echo "📦 Package版本: ${PACKAGE_VERSION}"
 
       - name: 🧪 运行代码检查
         run: |
@@ -117,161 +104,211 @@ jobs:  # 1. 构建和测试
           pnpm run build
           echo "✅ 项目构建完成"
 
-      - name: 📦 创建构建产物
+      - name: 📦 创建部署包
         run: |
-          echo "📦 准备构建产物..."
+          echo "📦 准备部署包..."
           mkdir -p release-assets
           
-          # 获取git commit hash
+          # 获取版本信息
           COMMIT_HASH=$(git rev-parse --short HEAD)
-          VERSION_WITH_HASH="${{ steps.version.outputs.version }}-${COMMIT_HASH}"
+          VERSION="${{ steps.version.outputs.version }}"
+          TIMESTAMP=$(date '+%Y%m%d-%H%M%S')
           
-          # 创建完整的源码包 (排除变化的文件)
-          echo "📁 创建源码包..."
-          tar -czf release-assets/qq-webhook-pro-${VERSION_WITH_HASH}-source.tar.gz \
-            --exclude='.git' \
-            --exclude='node_modules' \
-            --exclude='dist' \
-            --exclude='logs' \
-            --exclude='backups' \
-            --exclude='*.log' \
-            --exclude='.env*' \
-            --exclude='config.json' \
-            --exclude='release-assets' \
-            .
-          
-          # 创建构建后的发布包
-          echo "📦 创建发布包..."
+          # 创建部署包目录
+          echo "📦 创建部署包..."
           mkdir -p qq-webhook-pro-release
           
           # 复制必要文件
+          echo "📁 复制构建文件..."
           cp -r dist/ qq-webhook-pro-release/
           cp package.json qq-webhook-pro-release/
           cp pnpm-lock.yaml qq-webhook-pro-release/
           cp README.md qq-webhook-pro-release/
           cp PROJECT_SUMMARY.md qq-webhook-pro-release/
           
-          # 复制可选文件（如果存在）
-          [ -f DEPLOYMENT.md ] && cp DEPLOYMENT.md qq-webhook-pro-release/ || echo "⚠️  DEPLOYMENT.md 不存在，跳过"
-          [ -f Dockerfile ] && cp Dockerfile qq-webhook-pro-release/ || echo "⚠️  Dockerfile 不存在，跳过"  
-          [ -f docker-compose.yml ] && cp docker-compose.yml qq-webhook-pro-release/ || echo "⚠️  docker-compose.yml 不存在，跳过"
-          [ -f nginx.conf ] && cp nginx.conf qq-webhook-pro-release/ || echo "⚠️  nginx.conf 不存在，跳过"
-          
           # 创建启动脚本
+          echo "📝 创建启动脚本..."
           cat > qq-webhook-pro-release/start.sh << 'EOF'
-          #!/bin/bash
-          echo "🚀 启动 QQ Webhook Pro..."
-          
-          # 检查Node.js版本
-          if ! command -v node &> /dev/null; then
-              echo "❌ Node.js 未安装，请先安装 Node.js 18+"
-              exit 1
-          fi
-          
-          NODE_VERSION=$(node -v | sed 's/v//')
-          MAJOR_VERSION=$(echo $NODE_VERSION | cut -d. -f1)
-          
-          if [ "$MAJOR_VERSION" -lt 18 ]; then
-              echo "❌ Node.js 版本过低，需要 18+，当前版本: $NODE_VERSION"
-              exit 1
-          fi
-            # 安装生产依赖
-          echo "📦 安装生产依赖..."
-          pnpm install --prod --frozen-lockfile
-          
-          # 启动服务
-          echo "🎉 启动服务..."
-          pnpm start
-          EOF
+#!/bin/bash
+echo "🚀 启动 QQ Webhook Pro..."
+
+# 检查Node.js版本
+if ! command -v node &> /dev/null; then
+    echo "❌ Node.js 未安装，请先安装 Node.js 18+"
+    exit 1
+fi
+
+NODE_VERSION=$(node -v | sed 's/v//')
+MAJOR_VERSION=$(echo $NODE_VERSION | cut -d. -f1)
+
+if [ "$MAJOR_VERSION" -lt 18 ]; then
+    echo "❌ Node.js 版本过低，需要 18+，当前版本: $NODE_VERSION"
+    exit 1
+fi
+
+# 检查pnpm
+if ! command -v pnpm &> /dev/null; then
+    echo "📦 安装 pnpm..."
+    npm install -g pnpm
+fi
+
+# 安装生产依赖
+echo "📦 安装生产依赖..."
+pnpm install --prod --frozen-lockfile
+
+# 启动服务
+echo "🎉 启动服务..."
+pnpm start
+EOF
           
           chmod +x qq-webhook-pro-release/start.sh
           
           # 创建Windows启动脚本
           cat > qq-webhook-pro-release/start.bat << 'EOF'
-          @echo off
-          echo 🚀 启动 QQ Webhook Pro...
+@echo off
+chcp 65001 >nul
+echo 🚀 启动 QQ Webhook Pro...
+
+:: 检查Node.js
+node --version >nul 2>&1
+if errorlevel 1 (
+    echo ❌ Node.js 未安装，请先安装 Node.js 18+
+    pause
+    exit /b 1
+)
+
+:: 检查pnpm
+pnpm --version >nul 2>&1
+if errorlevel 1 (
+    echo 📦 安装 pnpm...
+    npm install -g pnpm
+)
+
+:: 安装生产依赖
+echo 📦 安装生产依赖...
+pnpm install --prod --frozen-lockfile
+
+:: 启动服务
+echo 🎉 启动服务...
+pnpm start
+pause
+EOF
           
-          :: 检查Node.js
-          node --version >nul 2>&1
-          if errorlevel 1 (
-              echo ❌ Node.js 未安装，请先安装 Node.js 18+
-              pause
-              exit /b 1
-          )
-            :: 安装生产依赖
-          echo 📦 安装生产依赖...
-          pnpm install --prod --frozen-lockfile
+          # 创建部署说明文件
+          cat > qq-webhook-pro-release/DEPLOY.md << 'EOF'
+# QQ Webhook Pro 部署包
+
+## 🚀 快速开始
+
+### Linux/macOS
+```bash
+./start.sh
+```
+
+### Windows
+```batch
+start.bat
+```
+
+## 📋 系统要求
+
+- Node.js 18+
+- pnpm (脚本会自动安装)
+
+## 🌐 访问地址
+
+启动成功后访问: http://localhost:3002
+
+默认账号: admin / admin123
+
+## 📚 更多文档
+
+请查看 README.md 和 PROJECT_SUMMARY.md
+EOF
           
-          :: 启动服务
-          echo 🎉 启动服务...
-          pnpm start
-          EOF
+          # 打包部署包
+          echo "📦 打包部署包..."
+          PACKAGE_NAME="qq-webhook-pro-${VERSION}-${COMMIT_HASH}"
+          tar -czf release-assets/${PACKAGE_NAME}.tar.gz qq-webhook-pro-release/
+          zip -r release-assets/${PACKAGE_NAME}.zip qq-webhook-pro-release/
           
-          # 压缩发布包
-          tar -czf release-assets/qq-webhook-pro-${VERSION_WITH_HASH}-release.tar.gz qq-webhook-pro-release/
-          zip -r release-assets/qq-webhook-pro-${VERSION_WITH_HASH}-release.zip qq-webhook-pro-release/
-          
-          echo "✅ 构建产物准备完成"
+          echo "✅ 部署包创建完成"
           echo "📁 生成的文件："
           ls -la release-assets/
+          
+          # 保存包名供后续步骤使用
+          echo "PACKAGE_NAME=${PACKAGE_NAME}" >> $GITHUB_ENV
 
-      - name: 📤 上传构建产物
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-assets
-          path: release-assets/
-          retention-days: 30
-
-  # 发布到GitHub Releases
-  release:
-    name: 🚀 发布版本
-    runs-on: ubuntu-latest
-    needs: build-and-test
-    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
-    
-    steps:
-      - name: 📥 下载构建产物
-        uses: actions/download-artifact@v4
-        with:
-          name: release-assets
-          path: release-assets/
-
+      # 仅在标签推送或手动触发时发布
       - name: 🚀 创建GitHub Release
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v1
         with:
-          name: ${{ needs.build-and-test.outputs.version }}
-          tag_name: ${{ needs.build-and-test.outputs.version }}
-          prerelease: ${{ github.event.inputs.prerelease || false }}
+          name: "QQ Webhook Pro ${{ steps.version.outputs.version }}"
+          tag_name: ${{ steps.version.outputs.version }}
+          prerelease: ${{ github.event.inputs.prerelease == 'true' || !startsWith(github.ref, 'refs/tags/') }}
           generate_release_notes: true
           files: |
             release-assets/*
           body: |
-            ## 🎉 QQ Webhook Pro ${{ needs.build-and-test.outputs.version }}
+            ## 🎉 QQ Webhook Pro ${{ steps.version.outputs.version }}
             
             ### 📦 下载说明
-            - **源码包**: `qq-webhook-pro-*-source.tar.gz` - 完整源码，需要自行构建
-            - **发布包**: `qq-webhook-pro-*-release.tar.gz/.zip` - 预构建版本，开箱即用
+            - **部署包 (.tar.gz)**: Linux/macOS 推荐，包含启动脚本
+            - **部署包 (.zip)**: Windows 推荐，包含批处理启动脚本
             
             ### 🚀 快速开始
-            1. 下载发布包
-            2. 解压后运行 `./start.sh` (Linux/Mac) 或 `start.bat` (Windows)
-            3. 访问 http://localhost:3002
+            1. 下载对应平台的部署包
+            2. 解压到目标目录
+            3. 运行启动脚本：
+               - Linux/macOS: `./start.sh`
+               - Windows: `start.bat`
+            4. 访问 http://localhost:3002
             
             ### 📋 系统要求
             - Node.js 18+
-            - pnpm (自动安装依赖)
+            - pnpm (启动脚本会自动安装)
+            
+            ### 🔑 默认登录
+            - 用户名: `admin`
+            - 密码: `admin123`
+            
+            ### ✨ 主要功能
+            - 🚀 Webhook转WebSocket实时消息转发
+            - 🔐 Ed25519签名验证 + JWT认证
+            - 📊 实时系统监控 (CPU/内存使用率)
+            - 🎨 现代化Web管理界面
+            - 🌙 深色/浅色主题切换
+            - 📝 完整的操作日志系统
             
             ---
             
-            完整文档请查看 [README.md](https://github.com/${{ github.repository }}/blob/main/README.md)
+            📚 **文档**: [README.md](https://github.com/${{ github.repository }}/blob/main/README.md) | [项目总结](https://github.com/${{ github.repository }}/blob/main/PROJECT_SUMMARY.md)
+            
+            🐛 **问题反馈**: [Issues](https://github.com/${{ github.repository }}/issues)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: ❌ 发布失败通知
-        if: needs.create-release.result == 'failure'
+      # 始终上传构建产物作为Artifact
+      - name: 📤 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets-${{ steps.version.outputs.version }}
+          path: release-assets/
+          retention-days: 30
+
+      - name: 📢 构建完成通知
         run: |
-          echo "❌ QQ Webhook Pro ${{ needs.build-and-test.outputs.version }} 发布失败!"
-          echo "请检查工作流日志获取详细信息。"
-          exit 1
+          echo "✅ QQ Webhook Pro ${{ steps.version.outputs.version }} 构建完成!"
+          echo ""
+          if [[ "${{ startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch' }}" == "true" ]]; then
+            echo "🚀 已发布到 GitHub Releases"
+            echo "🔗 Release 页面: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.version.outputs.version }}"
+          else
+            echo "📦 构建产物已上传为 Artifact，可在 Actions 页面下载"
+          fi
+          echo ""
+          echo "📁 包含的文件:"
+          ls -la release-assets/
 
   
