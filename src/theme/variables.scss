@@ -1,0 +1,97 @@
+// SCSS主题变量文件
+// 主色调
+$primary-color: var(--primary-color, #165DFF);
+$success-color: var(--color-success, #00B42A);
+$warning-color: var(--color-warning, #FF7D00);
+$danger-color: var(--color-danger, #F53F3F);
+$info-color: var(--color-info, #1890FF);
+
+// 背景色
+$bg-primary: var(--color-bg-1);
+$bg-secondary: var(--color-bg-2);
+$bg-tertiary: var(--color-bg-3);
+$bg-quaternary: var(--color-bg-4);
+
+// 文字色
+$text-primary: var(--color-text-1);
+$text-secondary: var(--color-text-2);
+$text-tertiary: var(--color-text-3);
+$text-quaternary: var(--color-text-4);
+
+// 边框色
+$border-primary: var(--color-border-1);
+$border-secondary: var(--color-border-2);
+$border-tertiary: var(--color-border-3);
+$border-quaternary: var(--color-border-4);
+
+// 圆角
+$border-radius: var(--border-radius, 8px);
+$border-radius-sm: var(--border-radius-sm, 4px);
+$border-radius-lg: var(--border-radius-lg, 12px);
+
+// 阴影
+$shadow-sm: var(--shadow-sm);
+$shadow-md: var(--shadow-md);
+$shadow-lg: var(--shadow-lg);
+
+// 过渡
+$transition-duration: var(--transition-duration, 0.2s);
+$transition-timing: var(--transition-timing, cubic-bezier(0.645, 0.045, 0.355, 1));
+
+// 渐变
+$gradient-primary: var(--gradient-primary);
+$gradient-success: var(--gradient-success);
+$gradient-warning: var(--gradient-warning);
+$gradient-danger: var(--gradient-danger);
+
+// 混合宏
+@mixin theme-transition($properties...) {
+  @if length($properties) == 0 {
+    transition: all $transition-duration $transition-timing;
+  } @else {
+    $transition-list: ();
+    @each $property in $properties {
+      $transition-list: append($transition-list, #{$property} $transition-duration $transition-timing, comma);
+    }
+    transition: $transition-list;
+  }
+}
+
+@mixin theme-hover-lift() {
+  @include theme-transition(transform, box-shadow);
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+@mixin theme-button-variant($bg-color, $text-color: white) {
+  background: $bg-color;
+  color: $text-color;
+  border: none;
+  border-radius: $border-radius;
+  @include theme-transition();
+  
+  &:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+@mixin theme-card() {
+  background: $bg-primary;
+  border: 1px solid $border-secondary;
+  border-radius: $border-radius;
+  box-shadow: $shadow-sm;
+  @include theme-transition();
+  
+  &:hover {
+    border-color: $primary-color;
+    box-shadow: $shadow-md;
+  }
+}

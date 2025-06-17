@@ -1,0 +1,308 @@
+/* 基础样式 */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #242424;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* 深色模式滚动条 */
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* 密钥管理表格样式 */
+.secret-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.secret-code {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  background-color: #f5f5f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+}
+
+.copy-button {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.secret-cell:hover .copy-button {
+  opacity: 1;
+}
+
+/* 批量操作工具栏 */
+.batch-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.batch-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.batch-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 统计卡片样式 */
+.stats-card .arco-card-body {
+  padding: 20px;
+}
+
+.stats-number {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.stats-label {
+  font-size: 12px;
+  color: #86909c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* URL预览样式 */
+.url-preview-container {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.url-preview-item {
+  margin-bottom: 12px;
+}
+
+.url-preview-item:last-child {
+  margin-bottom: 0;
+}
+
+.url-preview-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.url-preview-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 8px 12px;
+}
+
+.url-text {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  color: #475569;
+  flex: 1;
+  word-break: break-all;
+}
+
+.url-preview-value.websocket .url-text {
+  color: #059669;
+}
+
+/* 仪表盘快速操作按钮样式 */
+.dashboard-quick-action {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  height: 48px;
+  font-weight: 500;
+}
+
+.dashboard-quick-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: #1890ff;
+  color: #1890ff;
+}
+
+.dashboard-quick-action .arco-btn-icon {
+  font-size: 16px;
+}
+
+/* 仪表盘日志卡片样式 */
+.dashboard-log-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.dashboard-log-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 仪表盘统计卡片悬停效果 */
+.dashboard-stat-card {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+}
+
+.dashboard-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* 深色模式样式 */
+.dark .secret-code {
+  background-color: #374151;
+  color: #d1d5db;
+}
+
+.dark .batch-toolbar {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.dark .url-preview-container {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.dark .url-preview-value {
+  background-color: #1f2937;
+  border-color: #4b5563;
+}
+
+.dark .url-text {
+  color: #d1d5db;
+}
+
+.dark .url-preview-value.websocket .url-text {
+  color: #10b981;
+}
+
+/* 深色模式仪表盘样式 */
+.dark .dashboard-quick-action:hover {
+  border-color: #4096ff;
+  color: #4096ff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.dark .dashboard-log-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark .dashboard-stat-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* 表格响应式布局 */
+@media (max-width: 1200px) {
+  .arco-table-tr .arco-table-td {
+    padding: 8px 12px;
+  }
+  
+  .arco-table-tr .arco-table-td:nth-child(6), /* 创建时间 */
+  .arco-table-tr .arco-table-td:nth-child(7) {  /* 最后使用 */
+    display: none;
+  }
+  
+  .arco-table-thead .arco-table-th:nth-child(6),
+  .arco-table-thead .arco-table-th:nth-child(7) {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .arco-table-tr .arco-table-td:nth-child(4), /* 最大连接数 */
+  .arco-table-tr .arco-table-td:nth-child(5) {  /* 状态 */
+    display: none;
+  }
+  
+  .arco-table-thead .arco-table-th:nth-child(4),
+  .arco-table-thead .arco-table-th:nth-child(5) {
+    display: none;
+  }
+}
+
+/* 操作按钮优化 */
+.arco-space-item .arco-btn-small {
+  min-width: auto;
+  padding: 4px 8px;
+}
+
+.arco-dropdown-trigger .arco-btn {
+  padding: 4px 6px;
+}
+
+/* 提升表格的可视化效果 */
+.arco-table-tbody .arco-table-tr:hover {
+  background-color: #f8fafc;
+}
+
+.dark .arco-table-tbody .arco-table-tr:hover {
+  background-color: #374151;
+}
+
+.arco-table-tbody .arco-table-tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.dark .arco-table-tbody .arco-table-tr:nth-child(even) {
+  background-color: #2d3748;
+}

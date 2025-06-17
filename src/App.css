@@ -1,0 +1,1025 @@
+/* 导入 Arco Design 样式 */
+@import '@arco-design/web-react/dist/css/arco.css';
+
+/* 主题变量定义 - 增强版本 */
+:root {
+  --primary-color: #165DFF;
+  --color-success: #00B42A;
+  --color-warning: #FF7D00;
+  --color-danger: #F53F3F;
+  --color-info: #1890FF;
+  --border-radius: 8px;
+  --border-radius-sm: 4px;
+  --border-radius-lg: 12px;
+  --shadow-sm: 0 2px 8px 0 rgba(29, 35, 41, 0.05);
+  --shadow-md: 0 4px 12px 0 rgba(29, 35, 41, 0.1);
+  --shadow-lg: 0 8px 24px 0 rgba(29, 35, 41, 0.15);
+  --transition-duration: 0.2s;
+  --transition-timing: cubic-bezier(0.645, 0.045, 0.355, 1);
+  
+  /* 渐变效果 */
+  --gradient-primary: linear-gradient(135deg, var(--primary-color), #4080FF);
+  --gradient-success: linear-gradient(135deg, var(--color-success), #52C41A);
+  --gradient-warning: linear-gradient(135deg, var(--color-warning), #FAAD14);
+  --gradient-danger: linear-gradient(135deg, var(--color-danger), #FF7875);
+}
+
+/* 浅色主题 */
+html:not(.dark) {
+  --color-bg-1: #ffffff;
+  --color-bg-2: #f7f8fa;
+  --color-bg-3: #f2f3f5;
+  --color-bg-4: #e5e6eb;
+  --color-text-1: #1d2129;
+  --color-text-2: #4e5969;
+  --color-text-3: #86909c;
+  --color-text-4: #c9cdd4;
+  --color-border-1: #f0f0f0;
+  --color-border-2: #e5e6eb;
+  --color-border-3: #c9cdd4;
+  --color-border-4: #86909c;
+}
+
+/* 深色主题 */
+html.dark {
+  --color-bg-1: #17171a;
+  --color-bg-2: #1d1d21;
+  --color-bg-3: #232324;
+  --color-bg-4: #2a2a2b;
+  --color-text-1: #f7f8fa;
+  --color-text-2: #c9cdd4;
+  --color-text-3: #86909c;
+  --color-text-4: #6b6b70;
+  --color-border-1: #3c3c3f;
+  --color-border-2: #333334;
+  --color-border-3: #2a2a2b;
+  --color-border-4: #232324;
+}
+
+/* 紧凑模式 */
+html.compact {
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+}
+
+html:not(.compact) {
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+}
+
+/* 基础样式 */
+* {
+  box-sizing: border-box;
+  transition: 
+    background-color var(--transition-duration) ease,
+    border-color var(--transition-duration) ease,
+    color var(--transition-duration) ease !important;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--color-bg-3);
+  color: var(--color-text-1);
+}
+
+/* 应用布局样式 */
+.app-layout {
+  background-color: var(--color-bg-3) !important;
+}
+
+.app-sider {
+  background-color: var(--color-bg-1) !important;
+  border-right: 1px solid var(--color-border-2);
+}
+
+.app-content {
+  background-color: var(--color-bg-1) !important;
+  box-shadow: var(--shadow-sm);
+}
+
+/* 卡片样式优化 */
+.arco-card {
+  border: 1px solid var(--color-border-2) !important;
+  background-color: var(--color-bg-1) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.arco-card:hover {
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-1px);
+}
+
+/* 菜单样式 */
+.arco-menu {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.arco-menu-item {
+  color: var(--color-text-2) !important;
+  border-radius: var(--border-radius) !important;
+  margin: 4px 8px !important;
+}
+
+.arco-menu-item:hover {
+  background-color: var(--color-bg-2) !important;
+  color: var(--color-text-1) !important;
+}
+
+.arco-menu-item.arco-menu-selected {
+  background-color: var(--primary-color) !important;
+  color: #ffffff !important;
+}
+
+/* 按钮样式优化 */
+.arco-btn-primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+/* 输入框样式 */
+.arco-input,
+.arco-select-view,
+.arco-textarea {
+  background-color: var(--color-bg-1) !important;
+  border-color: var(--color-border-2) !important;
+  color: var(--color-text-1) !important;
+}
+
+/* 表格样式 */
+.arco-table {
+  background-color: var(--color-bg-1) !important;
+  border: 1px solid var(--color-border-2) !important;
+}
+
+.arco-table-th {
+  background-color: var(--color-bg-2) !important;
+  color: var(--color-text-1) !important;
+}
+
+.arco-table-td {
+  color: var(--color-text-2) !important;
+}
+
+/* 基础样式 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol';
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--color-bg-3);
+  color: var(--color-text-1);
+  transition: background-color var(--transition-duration) ease, color var(--transition-duration) ease;
+}
+
+html {
+  transition: background-color var(--transition-duration) ease;
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg-3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-4);
+}
+
+/* 应用布局 */
+.app-layout {
+  min-height: 100vh;
+  background-color: var(--color-bg-3);
+}
+
+.app-sider {
+  background-color: var(--color-bg-1) !important;
+  box-shadow: var(--shadow-sm);
+  border-right: 1px solid var(--color-border-2);
+}
+
+.app-header {
+  background: var(--color-bg-1) !important;
+  border-bottom: 1px solid var(--color-border-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.app-content {
+  background: var(--color-bg-1);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 主题切换按钮 */
+.theme-toggle {
+  cursor: pointer;
+  transition: all var(--transition-duration) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius);
+}
+
+.theme-toggle:hover {
+  background-color: var(--color-bg-3);
+  transform: scale(1.1);
+}
+
+/* 设置抽屉样式 */
+.settings-drawer .arco-drawer-content {
+  background-color: var(--color-bg-1);
+}
+
+.settings-drawer .arco-drawer-header {
+  background-color: var(--color-bg-1);
+  border-bottom: 1px solid var(--color-border-2);
+}
+
+/* 卡片样式覆盖 */
+.arco-card {
+  background-color: var(--color-bg-1) !important;
+  border: 1px solid var(--color-border-2) !important;
+}
+
+.arco-card-head {
+  background-color: var(--color-bg-1) !important;
+  border-bottom: 1px solid var(--color-border-2) !important;
+  color: var(--color-text-1) !important;
+}
+
+.arco-card-body {
+  background-color: var(--color-bg-1) !important;
+  color: var(--color-text-1) !important;
+}
+
+/* 菜单样式覆盖 */
+.arco-menu {
+  background-color: transparent !important;
+}
+
+.arco-menu-item {
+  color: var(--color-text-2) !important;
+  border-radius: var(--border-radius) !important;
+  margin: 4px 8px !important;
+}
+
+.arco-menu-item:hover {
+  background-color: var(--color-bg-3) !important;
+  color: var(--color-text-1) !important;
+}
+
+.arco-menu-item-selected {
+  background-color: var(--color-primary) !important;
+  color: #ffffff !important;
+}
+
+/* 按钮样式覆盖 */
+.arco-btn-outline {
+  border-color: var(--color-border-3) !important;
+  color: var(--color-text-2) !important;
+}
+
+.arco-btn-outline:hover {
+  border-color: var(--color-primary) !important;
+  color: var(--color-primary) !important;
+}
+
+/* 输入框样式覆盖 */
+.arco-input {
+  background-color: var(--color-bg-2) !important;
+  border-color: var(--color-border-3) !important;
+  color: var(--color-text-1) !important;
+}
+
+.arco-input:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2) !important;
+}
+
+/* 日志样式 */
+.log-entry {
+  padding: 12px 16px;
+  border-radius: var(--border-radius);
+  margin-bottom: 8px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  border-left: 3px solid;
+  background-color: var(--color-bg-2);
+}
+
+.log-entry.error {
+  border-left-color: var(--color-danger);
+  background-color: rgba(255, 77, 79, 0.1);
+}
+
+.log-entry.warning {
+  border-left-color: var(--color-warning);
+  background-color: rgba(250, 173, 20, 0.1);
+}
+
+.log-entry.info {
+  border-left-color: var(--color-success);
+  background-color: rgba(82, 196, 26, 0.1);
+}
+
+.log-timestamp {
+  font-size: 11px;
+  color: var(--color-text-3);
+  margin-bottom: 4px;
+}
+
+.log-message {
+  color: var(--color-text-1);
+  margin-bottom: 4px;
+}
+
+.log-details {
+  font-size: 11px;
+  color: var(--color-text-3);
+  background-color: var(--color-bg-3);
+  padding: 8px;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 连接状态样式 */
+.connection-item {
+  padding: 16px;
+  border-radius: var(--border-radius);
+  background-color: var(--color-bg-2);
+  border: 1px solid var(--color-border-2);
+  margin-bottom: 8px;
+  transition: all var(--transition-duration) ease;
+}
+
+.connection-item:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.connection-secret {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.connection-description {
+  color: var(--color-text-3);
+  font-size: 12px;
+}
+
+.connection-time {
+  color: var(--color-text-3);
+  font-size: 11px;
+}
+
+/* 统计卡片样式 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.stats-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-border-2);
+}
+
+.stats-item:last-child {
+  border-bottom: none;
+}
+
+.stats-label {
+  color: var(--color-text-2);
+  font-size: 14px;
+}
+
+.stats-value {
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .app-layout {
+    flex-direction: column;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .app-header {
+    padding: 0 16px;
+  }
+  
+  .app-content {
+    margin: 16px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .connection-item {
+    padding: 12px;
+  }
+  
+  .log-entry {
+    padding: 8px 12px;
+  }
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* 主题化组件样式 */
+.theme-badge {
+  transition: all var(--transition-duration) var(--transition-timing);
+  border-radius: var(--border-radius-sm);
+  font-weight: 500;
+}
+
+.theme-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+.theme-button {
+  border-radius: var(--border-radius);
+  transition: all var(--transition-duration) var(--transition-timing);
+  font-weight: 500;
+}
+
+.theme-button--primary {
+  background: var(--gradient-primary);
+  border: none;
+  color: white;
+}
+
+.theme-button--success {
+  background: var(--gradient-success);
+  border: none;
+  color: white;
+}
+
+.theme-button--warning {
+  background: var(--gradient-warning);
+  border: none;
+  color: white;
+}
+
+.theme-button--danger {
+  background: var(--gradient-danger);
+  border: none;
+  color: white;
+}
+
+.theme-card {
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-duration) var(--transition-timing);
+  background: var(--color-bg-1);
+  border: 1px solid var(--color-border-2);
+}
+
+.theme-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* 状态指示器 */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-indicator--connected {
+  background: rgba(0, 180, 42, 0.1);
+  color: var(--color-success);
+  border: 1px solid rgba(0, 180, 42, 0.2);
+}
+
+.status-indicator--disconnected {
+  background: rgba(245, 63, 63, 0.1);
+  color: var(--color-danger);
+  border: 1px solid rgba(245, 63, 63, 0.2);
+}
+
+.status-indicator--warning {
+  background: rgba(255, 125, 0, 0.1);
+  color: var(--color-warning);
+  border: 1px solid rgba(255, 125, 0, 0.2);
+}
+
+/* 数据卡片 */
+.data-card {
+  background: var(--color-bg-1);
+  border: 1px solid var(--color-border-2);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  transition: all var(--transition-duration) var(--transition-timing);
+}
+
+.data-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.data-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.data-card__title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-2);
+}
+
+.data-card__value {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-text-1);
+}
+
+.data-card__description {
+  font-size: 12px;
+  color: var(--color-text-3);
+  margin-top: 4px;
+}
+
+/* 徽章样式 */
+.status-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.connected {
+  background-color: rgba(82, 196, 26, 0.2);
+  color: var(--color-success);
+}
+
+.status-badge.disconnected {
+  background-color: rgba(255, 77, 79, 0.2);
+  color: var(--color-danger);
+}
+
+.status-badge.blocked {
+  background-color: rgba(255, 77, 79, 0.2);
+  color: var(--color-danger);
+}
+
+/* 代码块样式 */
+code {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+  background-color: var(--color-bg-3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--color-text-2);
+}
+
+pre {
+  background-color: var(--color-bg-2);
+  border: 1px solid var(--color-border-2);
+  border-radius: var(--border-radius);
+  padding: 16px;
+  overflow-x: auto;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-1);
+}
+
+/* 抽屉覆盖样式 */
+.arco-drawer-mask {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.arco-drawer {
+  background-color: var(--color-bg-1) !important;
+}
+
+.arco-drawer-header {
+  background-color: var(--color-bg-1) !important;
+  border-bottom: 1px solid var(--color-border-2) !important;
+  color: var(--color-text-1) !important;
+}
+
+.arco-drawer-body {
+  background-color: var(--color-bg-1) !important;
+  color: var(--color-text-1) !important;
+}
+
+/* Switch 组件主题化样式 */
+.arco-switch {
+  background-color: var(--color-border-3) !important;
+  border: 1px solid var(--color-border-2) !important;
+  transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
+}
+
+.arco-switch:hover {
+  background-color: var(--color-border-4) !important;
+  border-color: var(--color-border-3) !important;
+}
+
+.arco-switch-checked {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.arco-switch-checked:hover {
+  background-color: var(--primary-color-hover) !important;
+  border-color: var(--primary-color-hover) !important;
+  filter: brightness(1.05) !important;
+  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.2) !important;
+}
+
+.arco-switch-dot {
+  background-color: #ffffff !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
+}
+
+.arco-switch-checked .arco-switch-dot {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18) !important;
+}
+
+.arco-switch-disabled {
+  background-color: var(--color-bg-3) !important;
+  border-color: var(--color-border-2) !important;
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+.arco-switch-disabled .arco-switch-dot {
+  background-color: var(--color-bg-4) !important;
+}
+
+/* 带文字的开关样式 */
+.arco-switch-text {
+  min-width: 60px !important;
+}
+
+.arco-switch-text .arco-switch-text-holder {
+  color: var(--color-text-3) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.arco-switch-checked .arco-switch-text-holder {
+  color: #ffffff !important;
+}
+
+/* 主题化开关组件样式增强 */
+.theme-switch.arco-switch {
+  background: linear-gradient(135deg, var(--color-border-3), var(--color-border-2)) !important;
+  border: 1px solid var(--color-border-2) !important;
+  transition: all 0.2s cubic-bezier(0.645, 0.045, 0.355, 1) !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.theme-switch.arco-switch-checked {
+  background: var(--gradient-primary) !important;
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 2px 8px rgba(22, 93, 255, 0.25) !important;
+}
+
+.theme-switch.arco-switch:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+}
+
+.theme-switch.arco-switch-checked:hover {
+  background: var(--gradient-primary) !important;
+  filter: brightness(1.1) !important;
+  box-shadow: 0 4px 16px rgba(22, 93, 255, 0.3) !important;
+}
+
+/* 不同尺寸的开关样式 */
+.arco-switch-small {
+  min-width: 32px !important;
+  height: 18px !important;
+}
+
+.arco-switch-small .arco-switch-dot {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.arco-switch-large {
+  min-width: 48px !important;
+  height: 26px !important;
+}
+
+.arco-switch-large .arco-switch-dot {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+/* 下拉菜单样式 */
+.arco-dropdown {
+  background-color: var(--color-bg-1) !important;
+  border: 1px solid var(--color-border-2) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.arco-dropdown-option:hover {
+  background-color: var(--color-bg-3) !important;
+}
+
+/* 复制按钮样式 */
+.copy-button {
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+  opacity: 1;
+  background-color: var(--color-bg-3) !important;
+  color: var(--primary-color) !important;
+  transform: scale(1.05);
+}
+
+.copy-button:active {
+  transform: scale(0.95);
+}
+
+/* 密钥表格优化 */
+.secret-table-row:hover .copy-button {
+  opacity: 1;
+}
+
+.secret-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.secret-code {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+  font-size: 12px;
+  background-color: var(--color-bg-3);
+  padding: 4px 8px;
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--color-border-2);
+  word-break: break-all;
+  transition: all var(--transition-duration) ease;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.secret-code:hover {
+  background-color: var(--color-bg-2);
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+/* URL预览区域样式 */
+.url-preview-container {
+  padding: 16px;
+  background: linear-gradient(135deg, var(--color-bg-2), var(--color-bg-3));
+  border-radius: var(--border-radius);
+  border: 1px solid var(--color-border-2);
+  margin-top: 12px;
+}
+
+.url-preview-item {
+  margin-bottom: 16px;
+}
+
+.url-preview-item:last-child {
+  margin-bottom: 0;
+}
+
+.url-preview-label {
+  font-weight: 600;
+  color: var(--color-text-1);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.url-preview-value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+  font-size: 12px;
+  word-break: break-all;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: var(--color-bg-1);
+  border-radius: var(--border-radius-sm);
+  border: 1px solid var(--color-border-2);
+  transition: all var(--transition-duration) ease;
+}
+
+.url-preview-value:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.url-preview-value .url-text {
+  flex: 1;
+  color: var(--primary-color);
+}
+
+.url-preview-value.websocket .url-text {
+  color: var(--color-success);
+}
+
+/* 批量操作工具栏样式 */
+.batch-toolbar {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border-radius: var(--border-radius);
+  border: 1px solid #bae6fd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideInDown 0.3s ease;
+}
+
+.batch-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.batch-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 统计卡片样式 */
+.stats-card {
+  background: linear-gradient(135deg, var(--color-bg-1), var(--color-bg-2));
+  border: 1px solid var(--color-border-1);
+  border-radius: var(--border-radius);
+  transition: all var(--transition-duration) ease;
+}
+
+.stats-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.stats-number {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stats-label {
+  font-size: 14px;
+  color: var(--color-text-3);
+  margin-bottom: 8px;
+}
+
+/* 操作按钮组样式 */
+.action-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  font-size: 12px;
+  height: 28px;
+  min-width: 70px;
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition-duration) ease;
+}
+
+.action-button:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 更多操作下拉菜单样式 */
+.more-actions-trigger {
+  height: 28px;
+  min-width: 28px;
+  border-radius: var(--border-radius-sm);
+  transition: all var(--transition-duration) ease;
+}
+
+.more-actions-trigger:hover {
+  background-color: var(--color-bg-3);
+  transform: rotate(90deg);
+}
+
+/* 表格行悬停效果 */
+.arco-table-tbody .arco-table-tr:hover {
+  background-color: var(--color-bg-2);
+  transition: background-color var(--transition-duration) ease;
+}
+
+/* 密钥选择复选框样式 */
+.secret-checkbox {
+  transform: scale(1.1);
+}
+
+/* 表格响应式优化 */
+@media (max-width: 768px) {
+  .secret-code {
+    max-width: 120px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .action-button {
+    min-width: 60px;
+    font-size: 11px;
+  }
+}
+
+/* 暗色主题适配 */
+html.dark .batch-toolbar {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  border-color: #475569;
+}
+
+html.dark .url-preview-container {
+  background: linear-gradient(135deg, var(--color-bg-3), var(--color-bg-4));
+}
+
+html.dark .stats-card {
+  background: linear-gradient(135deg, var(--color-bg-2), var(--color-bg-3));
+}
